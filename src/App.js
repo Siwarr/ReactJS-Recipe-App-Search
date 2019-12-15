@@ -1,26 +1,71 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
+import { Recipe } from './components/recipe/recipe.component';
+import { SearchBox } from './components/search-box/search-box.component';
+import { SearchFilter } from './components/search-filter/search-filter.component';
 import './App.css';
 
-function App() {
+const App = () => {
+  const APP_ID = 'e4a82742';
+  const APP_KEY = 'b760a493e581ce85d447afc0ddda353f';
+
+  const [recipes, setRecipes] = useState([]);
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const getRecipes = async () => {
+      const response = await fetch(
+        `https://api.edamam.com/search?q=${query}&app_id=${APP_ID}&app_key=${APP_KEY}`
+      );
+      const data = await response.json();
+      setRecipes(data.hits);
+    };
+    getRecipes();
+  }, [query]);
+
+  const updateSearch = e => {
+    setSearch(e.target.value);
+  };
+
+  const getSearch = e => {
+    e.preventDefault();
+    setQuery(search);
+  };
+
+  const filterLogic = e => {
+    e.target.classList.toggle('active-filter');
+    const li = e.target;
+    if (li.classList.contains('active-filter')) {
+      setQuery(li.innerText);
+    } else {
+      setQuery('');
+    }
+  };
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header className="header">
+        <h1 className="title">Strange Recipes Finder</h1>
+        <form onSubmit={getSearch} className="search-form">
+          <SearchBox updateSearch={updateSearch} placeholder="Search recipe" />
+        </form>
+        <div className="search-filter">
+          <SearchFilter filterLogic={filterLogic} />
+        </div>
       </header>
+      <div className="recipes">
+        {recipes.map((recipe, index) => (
+          <Recipe
+            key={index}
+            title={recipe.recipe.label}
+            calories={recipe.recipe.calories}
+            image={recipe.recipe.image}
+            ingredients={recipe.recipe.ingredients}
+          />
+        ))}
+      </div>
     </div>
   );
-}
+};
 
 export default App;
